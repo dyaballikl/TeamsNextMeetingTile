@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
@@ -25,13 +26,34 @@ public partial class M365WebViewSyncWindow : Window
     private bool _allowClose;
     private string _targetUrl;
 
+    [DllImport("user32.dll")]
+    private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+
+    [DllImport("user32.dll")]
+    private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+
+    private const int GWL_EXSTYLE = -20;
+    private const int WS_EX_TOOLWINDOW = 0x00000080;
+    private const int WS_EX_TRANSPARENT = 0x00000020;
+    private const int WS_EX_NOACTIVATE = 0x08000000;
+
     public IntPtr Hwnd => new WindowInteropHelper(this).Handle;
+    public bool IsInBackground { get; private set; } = true;
     public bool NeedsInteractiveSignIn { get; private set; }
     public string LastStatusText { get; private set; } = "Initializing M365 sync...";
 
     public M365WebViewSyncWindow(string calendarUrl)
     {
         InitializeComponent();
+        LocationChanged += (_, _) =>
+        {
+            // Prevent Windows display sleep/wake from moving the hidden background window back onto the visible monitor
+            if (IsInBackground && (Left > -10000 || Top > -10000))
+            {
+                Left = -20000;
+                Top = -20000;
+            }
+        };
         _targetUrl = string.IsNullOrWhiteSpace(calendarUrl)
             ? "https://outlook.office.com/calendar/view/workweek"
             : calendarUrl;
@@ -101,9 +123,18 @@ public partial class M365WebViewSyncWindow : Window
 
     public void ShowInteractiveWindow()
     {
+        IsInBackground = false;
         ShowInTaskbar = true;
         ShowActivated = true;
         Opacity = 1.0;
+
+        IntPtr hwnd = Hwnd;
+        if (hwnd != IntPtr.Zero)
+        {
+            int exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+            exStyle &= ~(WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE);
+            SetWindowLong(hwnd, GWL_EXSTYLE, exStyle);
+        }
 
         double screenW = SystemParameters.WorkArea.Width;
         double screenH = SystemParameters.WorkArea.Height;
@@ -121,11 +152,20 @@ public partial class M365WebViewSyncWindow : Window
 
     public void SendToBackground()
     {
+        IsInBackground = true;
         ShowInTaskbar = false;
         ShowActivated = false;
         WindowState = WindowState.Normal;
         Left = -20000;
         Top = -20000;
+
+        IntPtr hwnd = Hwnd;
+        if (hwnd != IntPtr.Zero)
+        {
+            int exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+            exStyle |= (WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE);
+            SetWindowLong(hwnd, GWL_EXSTYLE, exStyle);
+        }
     }
 
     public void ForceClose()

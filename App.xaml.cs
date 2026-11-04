@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Windows;
@@ -31,14 +32,26 @@ public partial class App : System.Windows.Application
             return;
         }
 
-        _singleInstanceMutex = new Mutex(true, "TeamsNextMeetingTile_SingleInstance_Mutex", out bool createdNew);
-        if (!createdNew)
+        // If a previous instance is already running, replace it cleanly so re-launching always refreshes the tile
+        int currentPid = Environment.ProcessId;
+        foreach (Process proc in Process.GetProcessesByName("TeamsNextMeetingTile"))
         {
-            System.Windows.MessageBox.Show("Teams Next Meeting Tile is already running (check your Teams sidebar or System Tray).",
-                "Teams Next Meeting Tile", MessageBoxButton.OK, MessageBoxImage.Information);
-            Shutdown();
-            return;
+            try
+            {
+                if (proc.Id != currentPid)
+                {
+                    proc.Kill();
+                    proc.WaitForExit(2000);
+                }
+            }
+            catch { }
+            finally
+            {
+                proc.Dispose();
+            }
         }
+
+        _singleInstanceMutex = new Mutex(true, "TeamsNextMeetingTile_SingleInstance_Mutex", out _);
 
         DispatcherUnhandledException += (_, args) =>
         {

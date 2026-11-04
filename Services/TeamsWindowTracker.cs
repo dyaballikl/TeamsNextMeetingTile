@@ -187,15 +187,11 @@ public static class TeamsWindowTracker
             Bottom = bestRect.Top + (int)((logicalOffsetY + logicalHeight) * scale)
         };
 
-        WinRect actualOverlayRect = ownOverlayHandle != IntPtr.Zero
-            ? GetAccurateWindowRect(ownOverlayHandle)
-            : targetTileRect;
-
         state.IsTileAreaOccluded = CheckIfRectOccludedBeforeWindow(
             bestHandle,
             targetTileRect,
-            actualOverlayRect,
-            ownOverlayHandle);
+            ownOverlayHandle,
+            ownSyncHandle);
 
         return state;
     }
@@ -203,8 +199,8 @@ public static class TeamsWindowTracker
     private static bool CheckIfRectOccludedBeforeWindow(
         IntPtr targetWindow,
         WinRect tileRect,
-        WinRect actualOverlayRect,
-        IntPtr ownOverlayHandle)
+        IntPtr ownOverlayHandle,
+        IntPtr ownSyncHandle)
     {
         bool occluded = false;
 
@@ -216,7 +212,7 @@ public static class TeamsWindowTracker
                 return false;
             }
 
-            if (hWnd == ownOverlayHandle)
+            if (hWnd == ownOverlayHandle || (ownSyncHandle != IntPtr.Zero && hWnd == ownSyncHandle))
                 return true;
 
             if (!IsWindowVisible(hWnd) || IsIconic(hWnd) || IsWindowCloaked(hWnd))
@@ -227,14 +223,16 @@ public static class TeamsWindowTracker
                 return true;
 
             string className = GetWindowClassName(hWnd);
-            if (className is "Progman" or "WorkerW" or "Shell_TrayWnd" or "Shell_SecondaryTrayWnd" or "ime" or "MSCTFIME UI" or "DummyDWMListenerWindow" or "EdgeUiInputTopWndClass")
+            if (className is "Progman" or "WorkerW" or "Shell_TrayWnd" or "Shell_SecondaryTrayWnd"
+                or "ime" or "MSCTFIME UI" or "DummyDWMListenerWindow" or "EdgeUiInputTopWndClass"
+                or "Windows.UI.Core.CoreWindow" or "XamlExplorerHostIslandWindow" or "TopLevelWindowForOverflowXamlIsland")
                 return true;
 
             WinRect r = GetAccurateWindowRect(hWnd);
             if (r.Width <= 20 || r.Height <= 20)
                 return true;
 
-            if (r.Intersects(tileRect) || (actualOverlayRect.Width > 0 && r.Intersects(actualOverlayRect)))
+            if (r.Intersects(tileRect))
             {
                 occluded = true;
                 return false;

@@ -49,6 +49,14 @@ public partial class MainWindow : Window
     [DllImport("user32.dll")]
     private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
+    [DllImport("user32.dll")]
+    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
+    private static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
+    private const uint SWP_NOSIZE = 0x0001;
+    private const uint SWP_NOMOVE = 0x0002;
+    private const uint SWP_NOACTIVATE = 0x0010;
+
     private const int GWL_EXSTYLE = -20;
     private const int WS_EX_TOOLWINDOW = 0x00000080;
     private const int WS_EX_TRANSPARENT = 0x00000020;
@@ -470,11 +478,11 @@ public partial class MainWindow : Window
 
     private void ShowOverlayVisible()
     {
+        IntPtr hwnd = new WindowInteropHelper(this).Handle;
         if (Opacity < 1.0)
         {
             Opacity = 1.0;
             IsHitTestVisible = true;
-            IntPtr hwnd = new WindowInteropHelper(this).Handle;
             if (hwnd != IntPtr.Zero)
             {
                 int exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
@@ -483,6 +491,12 @@ public partial class MainWindow : Window
                     SetWindowLong(hwnd, GWL_EXSTYLE, exStyle & ~WS_EX_TRANSPARENT);
                 }
             }
+        }
+
+        if (hwnd != IntPtr.Zero)
+        {
+            // Keep topmost Z-order active even after overnight Windows lock screen / DWM display wake
+            SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
         }
     }
 

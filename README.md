@@ -15,8 +15,10 @@ A native Windows (.NET 9 WPF) dark-mode overlay tile designed to dock directly i
 
 ## How to Launch
 Double-click:
-- [`Launch-TeamsNextMeetingTile.bat`](./Launch-TeamsNextMeetingTile.bat)
+- [`Launch-TeamsNextMeetingTile.bat`](./Launch-TeamsNextMeetingTile.bat) — Launches the tile app (auto-docks whenever Teams is open)
+- [`Launch-Teams-And-Tile.bat`](./Launch-Teams-And-Tile.bat) — Launches both Microsoft Teams (`msteams:`) and the tile app together
 - Or run the executable directly: [`bin\Release\net9.0-windows\TeamsNextMeetingTile.exe`](./bin/Release/net9.0-windows/TeamsNextMeetingTile.exe)
+- **Auto-Start with Windows / Teams:** Open `⚙ Settings` on the tile and check **`Start automatically with Windows (auto-shows when Teams opens)`** to have the tile sit quietly in the system tray at login and appear automatically every time Microsoft Teams starts.
 
 ---
 

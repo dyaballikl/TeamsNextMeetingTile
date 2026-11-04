@@ -48,7 +48,8 @@
                 <WrapPanel Orientation="Horizontal">
                     <CheckBox x:Name="ChkDockToTeams" Content="Dock to Microsoft Teams window" Margin="0,4,18,4" Checked="Setting_Changed" Unchecked="Setting_Changed"/>
                     <CheckBox x:Name="ChkAutoHideCovered" Content="Auto-hide when Teams is minimized or covered" Margin="0,4,18,4" Checked="Setting_Changed" Unchecked="Setting_Changed"/>
-                    <CheckBox x:Name="ChkLockPosition" Content="Lock drag position" Margin="0,4,0,4" Checked="Setting_Changed" Unchecked="Setting_Changed"/>
+                    <CheckBox x:Name="ChkLockPosition" Content="Lock drag position" Margin="0,4,18,4" Checked="Setting_Changed" Unchecked="Setting_Changed"/>
+                    <CheckBox x:Name="ChkStartWithWindows" Content="Start automatically with Windows (auto-shows when Teams opens)" Margin="0,4,0,4" Checked="ChkStartWithWindows_Changed" Unchecked="ChkStartWithWindows_Changed"/>
                 </WrapPanel>
 
                 <StackPanel Orientation="Horizontal" Margin="0,8,0,0" VerticalAlignment="Center">

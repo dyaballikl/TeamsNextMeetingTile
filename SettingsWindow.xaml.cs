@@ -5,6 +5,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Interop;
 using TeamsNextMeetingTile.Models;
+using TeamsNextMeetingTile.Services;
 
 namespace TeamsNextMeetingTile;
 
@@ -36,6 +37,7 @@ public partial class SettingsWindow : Window
         ChkDockToTeams.IsChecked = _settings.DockToTeamsWindow;
         ChkAutoHideCovered.IsChecked = _settings.AutoHideWhenTeamsCovered;
         ChkLockPosition.IsChecked = _settings.LockPosition;
+        ChkStartWithWindows.IsChecked = StartupManager.IsStartupEnabled();
         TxtTileWidth.Text = ((int)_settings.TileWidth).ToString(CultureInfo.InvariantCulture);
 
         ChkEnableM365.IsChecked = _settings.EnableM365WebViewSync;
@@ -79,6 +81,15 @@ public partial class SettingsWindow : Window
         _settings.Save();
 
         _mainWindow.ApplySettingsImmediately();
+    }
+
+    private void ChkStartWithWindows_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_isLoadingUi)
+            return;
+
+        bool enable = ChkStartWithWindows.IsChecked == true;
+        StartupManager.SetStartupEnabled(enable);
     }
 
     private void TxtTileWidth_LostFocus(object sender, RoutedEventArgs e)
