@@ -309,19 +309,21 @@ public partial class MainWindow : Window
         // Urgency colors
         UpdateUrgencyColors(untilStart);
 
-        // Join button
-        if (current.HasTeamsLink)
+        // Join button: only display when meeting starts in 2 minutes or less (or is already in progress)
+        if (current.HasTeamsLink && untilStart.TotalMinutes <= 2.0)
         {
             _primaryActionMode = "Join";
             _activeJoinUrl = current.JoinUrl;
             BtnPrimaryAction.Content = "Join";
             BtnPrimaryAction.Visibility = Visibility.Visible;
+            CyclePanel.Margin = new Thickness(2, 0, 4, 0);
         }
         else
         {
             _primaryActionMode = "None";
             _activeJoinUrl = string.Empty;
             BtnPrimaryAction.Visibility = Visibility.Collapsed;
+            CyclePanel.Margin = new Thickness(2, 0, 0, 0);
         }
 
         if (_trayIcon != null)
