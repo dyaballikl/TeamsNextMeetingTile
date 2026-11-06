@@ -71,10 +71,11 @@ public class MeetingItem
         int hours = (totalMinutes % (24 * 60)) / 60;
         int minutes = totalMinutes % 60;
 
-        // Over 2d 0h 0m -> just show #d
+        // Over 2d 0h 0m -> show calendar date difference (#d = StartTime.Date - now.Date)
         if (totalMinutes > 2 * 24 * 60)
         {
-            return $"{days}d";
+            int calendarDays = Math.Max(2, (StartTime.Date - now.Date).Days);
+            return $"{calendarDays}d";
         }
 
         // 1d up to 2d 0h 0m -> show #d #h #m
@@ -90,6 +91,30 @@ public class MeetingItem
         }
 
         // Under 1h -> just show #m
+        return $"{minutes}m";
+    }
+
+    public string GetExactDhmBreakdown(DateTime now)
+    {
+        TimeSpan diff = StartTime - now;
+        if (diff.TotalSeconds <= 0)
+        {
+            return GetDhmCountdown(now);
+        }
+
+        int totalMinutes = Math.Max(1, (int)Math.Ceiling(diff.TotalSeconds / 60.0));
+        int days = totalMinutes / (24 * 60);
+        int hours = (totalMinutes % (24 * 60)) / 60;
+        int minutes = totalMinutes % 60;
+
+        if (days >= 1)
+        {
+            return $"{days}d {hours}h {minutes}m";
+        }
+        if (hours >= 1)
+        {
+            return $"{hours}h {minutes}m";
+        }
         return $"{minutes}m";
     }
 }

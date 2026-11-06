@@ -293,8 +293,9 @@ public partial class MainWindow : Window
         }
 
         TxtDhmCountdown.Text = dhmText;
+        CountdownBadge.ToolTip = $"Time remaining until meeting start: {current.GetExactDhmBreakdown(now)}";
         TxtMeetingTitle.Text = current.Title;
-        TxtMeetingTitle.ToolTip = $"{current.Title}\n{current.GetFormattedTimeRange(now)}\nCountdown: {dhmText}\nSource: {current.Source}";
+        TxtMeetingTitle.ToolTip = $"{current.Title}\n{current.GetFormattedTimeRange(now)}\nCountdown: {current.GetExactDhmBreakdown(now)}\nSource: {current.Source}";
         TxtStartTime.Text = $"Start: {startText}";
         TxtStartTime.ToolTip = $"Starts: {current.StartTime:dddd, dd MMM yyyy h:mm tt}\nEnds: {current.EndTime:h:mm tt}";
 

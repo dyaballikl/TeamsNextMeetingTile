@@ -89,7 +89,7 @@
                                 Margin="5,0,4,0"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Center"
-                                ToolTip="Time remaining until meeting start (Days Hours Minutes)">
+                                ToolTip="Time remaining until meeting start">
                             <TextBlock x:Name="TxtDhmCountdown"
                                        Text="0d 0h 0m"
                                        FontSize="10.5"
