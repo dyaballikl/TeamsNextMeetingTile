@@ -28,6 +28,7 @@ public class TeamsWindowState
 {
     public bool IsTeamsRunning { get; set; }
     public bool IsTeamsMinimized { get; set; }
+    public bool IsChatTabActive { get; set; }
     public bool IsTileAreaOccluded { get; set; }
     public IntPtr TeamsHandle { get; set; }
     public WinRect TeamsBounds { get; set; }
@@ -84,6 +85,7 @@ public static class TeamsWindowTracker
         var state = new TeamsWindowState();
         IntPtr bestHandle = IntPtr.Zero;
         WinRect bestRect = default;
+        string bestTitle = string.Empty;
         int bestScore = -1;
         bool foundMinimizedTeams = false;
 
@@ -145,10 +147,7 @@ public static class TeamsWindowTracker
 
             int score = (rect.Width * rect.Height) / 1000;
             if (isNativeTeamsProcess) score += 5000;
-            if (title.StartsWith("Chat |", StringComparison.OrdinalIgnoreCase) ||
-                title.StartsWith("Activity |", StringComparison.OrdinalIgnoreCase) ||
-                title.StartsWith("Calendar |", StringComparison.OrdinalIgnoreCase) ||
-                title.StartsWith("Teams |", StringComparison.OrdinalIgnoreCase))
+            if (IsMainTeamsWindowTitle(title))
             {
                 score += 10000;
             }
@@ -158,6 +157,7 @@ public static class TeamsWindowTracker
                 bestScore = score;
                 bestHandle = hWnd;
                 bestRect = rect;
+                bestTitle = title;
             }
 
             return true;
@@ -172,6 +172,7 @@ public static class TeamsWindowTracker
 
         state.IsTeamsRunning = true;
         state.IsTeamsMinimized = false;
+        state.IsChatTabActive = IsChatTabTitle(bestTitle);
         state.TeamsHandle = bestHandle;
         state.TeamsBounds = bestRect;
 
@@ -262,6 +263,41 @@ public static class TeamsWindowTracker
             return cloaked != 0;
         }
         return false;
+    }
+
+    private static string StripUnreadPrefix(string title)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+            return string.Empty;
+
+        string t = title.TrimStart();
+        if (t.StartsWith('('))
+        {
+            int closeIdx = t.IndexOf(')');
+            if (closeIdx > 0 && closeIdx < 10)
+            {
+                t = t.Substring(closeIdx + 1).TrimStart();
+            }
+        }
+        return t;
+    }
+
+    private static bool IsMainTeamsWindowTitle(string title)
+    {
+        string t = StripUnreadPrefix(title);
+        return t.StartsWith("Chat |", StringComparison.OrdinalIgnoreCase) ||
+               t.StartsWith("Activity |", StringComparison.OrdinalIgnoreCase) ||
+               t.StartsWith("Calendar |", StringComparison.OrdinalIgnoreCase) ||
+               t.StartsWith("Teams |", StringComparison.OrdinalIgnoreCase) ||
+               t.StartsWith("Calls |", StringComparison.OrdinalIgnoreCase) ||
+               t.StartsWith("OneDrive |", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsChatTabTitle(string title)
+    {
+        string t = StripUnreadPrefix(title);
+        return t.StartsWith("Chat |", StringComparison.OrdinalIgnoreCase) ||
+               t.Equals("Chat", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string GetWindowTitle(IntPtr hWnd)

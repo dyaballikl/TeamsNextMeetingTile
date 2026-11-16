@@ -432,9 +432,9 @@ public partial class MainWindow : Window
             ActualWidth > 0 ? ActualWidth : _settings.TileWidth,
             ActualHeight > 0 ? ActualHeight : 72);
 
-        if (!state.IsTeamsRunning || state.IsTeamsMinimized || state.TeamsHandle == IntPtr.Zero)
+        if (!state.IsTeamsRunning || state.IsTeamsMinimized || state.TeamsHandle == IntPtr.Zero || !state.IsChatTabActive)
         {
-            if (_settings.AutoHideWhenTeamsCovered)
+            if (_settings.AutoHideWhenTeamsCovered || !state.IsChatTabActive)
             {
                 HideOverlayInvisible();
             }
