@@ -194,10 +194,20 @@ public partial class MainWindow : Window
         UpdateTileDisplay();
     }
 
+    private static string GetMeetingKey(MeetingItem m) =>
+        $"{m.Title.Trim().ToLowerInvariant()}|{m.StartTime:yyyy-MM-dd HH:mm}";
+
     public void RebuildMergedMeetings()
     {
         DateTime now = DateTime.Now;
         DateTime graceCutoff = now.AddMinutes(-Math.Max(1, _settings.GraceMinutesAfterStart));
+
+        // If viewing an item past index 0 (y/x where y > 1), remember it so we keep tracking the same item
+        // when earlier items expire and drop off the front of the list.
+        MeetingItem? previouslySelected = (_selectedMeetingIndex > 0 && _selectedMeetingIndex < _mergedUpcoming.Count)
+            ? _mergedUpcoming[_selectedMeetingIndex]
+            : null;
+        string? prevKey = previouslySelected != null ? GetMeetingKey(previouslySelected) : null;
 
         var combined = new List<MeetingItem>();
         combined.AddRange(_settings.ManualMeetings);
@@ -221,7 +231,7 @@ public partial class MainWindow : Window
         // Deduplicate by normalized title + start minute
         var deduped = combined
             .Where(m => m.EndTime > now && (m.StartTime >= graceCutoff || _settings.IncludeInProgressMeetings))
-            .GroupBy(m => $"{m.Title.Trim().ToLowerInvariant()}|{m.StartTime:yyyy-MM-dd HH:mm}")
+            .GroupBy(GetMeetingKey)
             .Select(g =>
             {
                 // Prefer item that has a Teams JoinUrl
@@ -236,14 +246,35 @@ public partial class MainWindow : Window
         {
             deduped = combined
                 .Where(m => m.StartTime <= now && m.EndTime > now)
-                .GroupBy(m => $"{m.Title.Trim().ToLowerInvariant()}|{m.StartTime:yyyy-MM-dd HH:mm}")
+                .GroupBy(GetMeetingKey)
                 .Select(g => g.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x.JoinUrl)) ?? g.First())
                 .OrderBy(m => m.StartTime)
                 .ToList();
         }
 
         _mergedUpcoming = deduped;
-        if (_selectedMeetingIndex >= _mergedUpcoming.Count)
+
+        if (_mergedUpcoming.Count == 0)
+        {
+            _selectedMeetingIndex = 0;
+        }
+        else if (prevKey != null)
+        {
+            int trackedIdx = _mergedUpcoming.FindIndex(m => GetMeetingKey(m) == prevKey);
+            if (trackedIdx >= 0)
+            {
+                _selectedMeetingIndex = trackedIdx;
+            }
+            else if (previouslySelected != null && previouslySelected.StartTime < graceCutoff)
+            {
+                _selectedMeetingIndex = 0;
+            }
+            else
+            {
+                _selectedMeetingIndex = Math.Clamp(_selectedMeetingIndex, 0, _mergedUpcoming.Count - 1);
+            }
+        }
+        else if (_selectedMeetingIndex < 0 || _selectedMeetingIndex >= _mergedUpcoming.Count)
         {
             _selectedMeetingIndex = 0;
         }
@@ -304,8 +335,10 @@ public partial class MainWindow : Window
         TxtCollapsedDhm.Text = dhmText;
         TxtCollapsedTitle.Text = current.Title;
 
-        // Cycle buttons visibility
+        // Cycle buttons visibility & boundary disabled states
         CyclePanel.Visibility = _mergedUpcoming.Count > 1 ? Visibility.Visible : Visibility.Collapsed;
+        BtnPrevMeeting.IsEnabled = _selectedMeetingIndex > 0;
+        BtnNextMeeting.IsEnabled = _selectedMeetingIndex < _mergedUpcoming.Count - 1;
 
         // Urgency colors
         UpdateUrgencyColors(untilStart);
@@ -598,19 +631,19 @@ public partial class MainWindow : Window
 
     private void BtnPrevMeeting_Click(object sender, RoutedEventArgs e)
     {
-        if (_mergedUpcoming.Count <= 1)
+        if (_selectedMeetingIndex <= 0)
             return;
 
-        _selectedMeetingIndex = (_selectedMeetingIndex - 1 + _mergedUpcoming.Count) % _mergedUpcoming.Count;
+        _selectedMeetingIndex--;
         UpdateTileDisplay();
     }
 
     private void BtnNextMeeting_Click(object sender, RoutedEventArgs e)
     {
-        if (_mergedUpcoming.Count <= 1)
+        if (_selectedMeetingIndex >= _mergedUpcoming.Count - 1)
             return;
 
-        _selectedMeetingIndex = (_selectedMeetingIndex + 1) % _mergedUpcoming.Count;
+        _selectedMeetingIndex++;
         UpdateTileDisplay();
     }
 

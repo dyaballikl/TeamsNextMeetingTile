@@ -156,10 +156,46 @@
 
                         <!-- Prev / Next Meeting Cycle Buttons -->
                         <StackPanel x:Name="CyclePanel" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="2,0,4,0" Visibility="Collapsed">
-                            <Button Content="‹" Click="BtnPrevMeeting_Click" ToolTip="Previous upcoming meeting"
-                                    Background="#353535" Foreground="#CCCCCC" BorderThickness="0" Padding="4,0" FontSize="11" Cursor="Hand" Margin="0,0,2,0"/>
-                            <Button Content="›" Click="BtnNextMeeting_Click" ToolTip="Next upcoming meeting"
-                                    Background="#353535" Foreground="#CCCCCC" BorderThickness="0" Padding="4,0" FontSize="11" Cursor="Hand"/>
+                            <StackPanel.Resources>
+                                <Style x:Key="CycleNavButtonStyle" TargetType="Button">
+                                    <Setter Property="Background" Value="#353535"/>
+                                    <Setter Property="Foreground" Value="#CCCCCC"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="Padding" Value="4,0"/>
+                                    <Setter Property="FontSize" Value="11"/>
+                                    <Setter Property="Cursor" Value="Hand"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="Bd"
+                                                        Background="{TemplateBinding Background}"
+                                                        CornerRadius="3"
+                                                        Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="Bd" Property="Background" Value="#464646"/>
+                                                        <Setter Property="Foreground" Value="#FFFFFF"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsPressed" Value="True">
+                                                        <Setter TargetName="Bd" Property="Background" Value="#5B5FC7"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsEnabled" Value="False">
+                                                        <Setter TargetName="Bd" Property="Background" Value="#2C2C2C"/>
+                                                        <Setter Property="Foreground" Value="#555555"/>
+                                                        <Setter Property="Cursor" Value="Arrow"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </StackPanel.Resources>
+                            <Button x:Name="BtnPrevMeeting" Content="‹" Click="BtnPrevMeeting_Click" ToolTip="Previous upcoming meeting"
+                                    Style="{StaticResource CycleNavButtonStyle}" Margin="0,0,2,0"/>
+                            <Button x:Name="BtnNextMeeting" Content="›" Click="BtnNextMeeting_Click" ToolTip="Next upcoming meeting"
+                                    Style="{StaticResource CycleNavButtonStyle}"/>
                         </StackPanel>
 
                         <!-- Action Button (Join / Sign In / Sync) -->
